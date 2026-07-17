@@ -1,6 +1,6 @@
 function InstitutionSelect({ institutions, value, onChange }) {
     return (
-        <div>
+        <div className="form-group">
             <label>Institution</label>
 
             <select

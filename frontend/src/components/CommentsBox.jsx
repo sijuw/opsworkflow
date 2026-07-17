@@ -1,6 +1,6 @@
 function CommentsBox({ value, onChange }) {
     return (
-        <div>
+        <div className="form-group">
             <label>Additional Comments</label>
 
             <textarea

@@ -1,6 +1,6 @@
 function ResponseCodeSelect({ responseCodes, value, onChange }) {
     return (
-        <div>
+        <div className="form-group">
             <label>Response Code</label>
 
             <select

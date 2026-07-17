@@ -1,6 +1,6 @@
 function AttachSamplesCheckbox({ checked, onChange }) {
     return (
-        <div>
+        <div className="form-group">
             <label>
                 <input
                     type="checkbox"

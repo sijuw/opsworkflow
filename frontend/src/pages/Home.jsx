@@ -1,17 +1,23 @@
 import EmailForm from "../components/EmailForm";
+import "../styles/home.css";
 
 function Home() {
 
     return (
 
-        <div style={{ padding: 40 }}>
+        <div className="page">
 
-            <h1>OpsFlow</h1>
+            <div className="card">
 
-            <EmailForm />
+                <h1>OpsFlow</h1>
+
+                <p>Email Notification Portal</p>
+
+                <EmailForm/>
+
+            </div>
 
         </div>
-
     );
 
 }

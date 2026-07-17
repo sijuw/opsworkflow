@@ -4,17 +4,21 @@ import InstitutionSelect from "./InstitutionSelect";
 import ResponseCodeSelect from "./ResponseCodeSelect";
 import AttachSamplesCheckbox from "./AttachSamplesCheckbox";
 import CommentsBox from "./CommentsBox";
-
+import "../styles/form.css";
+import Notification from "./Notification";
 import {
     getInstitutions,
     getResponseCodes,
     sendEmail,
 } from "../services/api";
 
+
 function EmailForm() {
 
     const [institutions, setInstitutions] = useState([]);
     const [responseCodes, setResponseCodes] = useState([]);
+    const [message, setMessage] = useState("");
+    const [messageType, setMessageType] = useState("");     
 
     const [institution, setInstitution] = useState("");
     const [responseCode, setResponseCode] = useState("");
@@ -40,8 +44,16 @@ function EmailForm() {
         setResponseCodes(response.data);
     }
 
-    async function handleSendEmail() {
+    
 
+    async function handleSendEmail() {
+        if (!institution) {
+
+        setMessageType("error");
+        setMessage("Please select an institution.");
+
+        return;
+    }
         try {
 
             setSending(true);
@@ -53,13 +65,15 @@ function EmailForm() {
                 comments: comments,
             });
 
-            alert("Email sent successfully!");
+            setMessageType("success");
+            setMessage("Email sent successfully.");
 
         } catch (error) {
 
             console.error(error);
 
-            alert("Failed to send email.");
+            setMessageType("error");
+            setMessage("Failed to send email.");
 
         } finally {
 
@@ -71,7 +85,13 @@ function EmailForm() {
 
     return (
         <>
+            <Notification
+                type={messageType}
+                message={message}
+            />
             <InstitutionSelect
+                type={messageType}
+                message={message}
                 institutions={institutions}
                 value={institution}
                 onChange={setInstitution}
@@ -105,7 +125,7 @@ function EmailForm() {
                 onClick={handleSendEmail}
                 disabled={sending}
             >
-                {sending ? "Sending..." : "Send Email"}
+                {sending ? "Sending Notification..." : "Send Notification"}
             </button>
         </>
     );
