@@ -38,7 +38,7 @@ textarea{
 
 }
 
-button{
+/* button{
 
     width:100%;
 
@@ -62,7 +62,7 @@ button:hover{
 
     background:#004494;
 
-}
+} */
 
 button:disabled{
 

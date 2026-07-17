@@ -1,25 +1,15 @@
+import Header from "../components/layout/Header";
+import PageContainer from "../components/layout/PageContainer";
 import EmailForm from "../components/EmailForm";
-import "../styles/home.css";
 
-function Home() {
+export default function Home() {
+  return (
+    <>
+      <Header />
 
-    return (
-
-        <div className="page">
-
-            <div className="card">
-
-                <h1>OpsFlow</h1>
-
-                <p>Email Notification Portal</p>
-
-                <EmailForm/>
-
-            </div>
-
-        </div>
-    );
-
+      <PageContainer>
+        <EmailForm />
+      </PageContainer>
+    </>
+  );
 }
-
-export default Home;
