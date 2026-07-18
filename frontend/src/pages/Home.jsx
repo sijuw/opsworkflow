@@ -1,15 +1,13 @@
-import Header from "../components/layout/Header";
-import PageContainer from "../components/layout/PageContainer";
 import EmailForm from "../components/EmailForm";
 
-export default function Home() {
+function Home() {
   return (
-    <>
-      <Header />
-
-      <PageContainer>
+    <div className="min-h-screen bg-slate-100">
+      <div className="mx-auto max-w-3xl px-6 py-12">
         <EmailForm />
-      </PageContainer>
-    </>
+      </div>
+    </div>
   );
 }
+
+export default Home;

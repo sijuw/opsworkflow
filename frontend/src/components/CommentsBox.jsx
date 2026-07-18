@@ -10,7 +10,7 @@ function CommentsBox({ value, onChange }) {
                 placeholder="Optional context for the bank/institution..."
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                className="resize-none min-h-[100px]"
+                className="min-h-28 resize-y"
             />
         </div>
     );

@@ -13,3 +13,7 @@ export const getResponseCodes = () =>
 
 export const sendEmail = (payload) =>
     api.post("/email/send", payload);
+
+export function previewEmail(data) {
+    return api.post("/email/preview", data);
+}

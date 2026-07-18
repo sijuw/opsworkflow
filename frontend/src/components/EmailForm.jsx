@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
-import { toast } from "sonner"; // Import the toast function
-
+import { toast } from "sonner";
+import { Mail, Send, Loader2 } from "lucide-react";
 import InstitutionSelect from "./InstitutionSelect";
 import ResponseCodeSelect from "./ResponseCodeSelect";
 import AttachSamplesCheckbox from "./AttachSamplesCheckbox";
 import CommentsBox from "./CommentsBox";
-// We removed Notification.jsx and form.css imports
+import EmailPreviewDialog from "./EmailPreviewDialog";
+
 import {
     getInstitutions,
     getResponseCodes,
     sendEmail,
+    previewEmail
 } from "../services/api";
 import {
   Card,
@@ -23,6 +25,11 @@ import { Button } from "@/components/ui/button";
 function EmailForm() {
     const [institutions, setInstitutions] = useState([]);
     const [responseCodes, setResponseCodes] = useState([]);
+    
+    // 1. Added previewData to state
+    const [previewData, setPreviewData] = useState(null); 
+    const [previewOpen, setPreviewOpen] = useState(false);
+    const [loadingPreview, setLoadingPreview] = useState(false);
 
     const [institution, setInstitution] = useState("");
     const [responseCode, setResponseCode] = useState("");
@@ -55,9 +62,36 @@ function EmailForm() {
         }
     }
 
-    async function handleSendEmail() {
+    async function handlePreview() {
         if (!institution) {
-            // Trigger a warning toast
+            // 2. Swapped to toast
+            toast.warning("Please select an institution.");
+            return;
+        }
+
+        try {
+            setLoadingPreview(true);
+
+            const response = await previewEmail({
+                institution_id: Number(institution),
+                response_code: responseCode || null,
+                attach_samples: attachSamples, // 3. Added the missing parameter
+            });
+
+            setPreviewData(response.data);
+            setPreviewOpen(true);
+
+        } catch (error) {
+            console.error(error);
+            // 2. Swapped to toast
+            toast.error("Unable to generate preview.");
+        } finally {
+            setLoadingPreview(false);
+        }
+    }
+
+    async function confirmAndSendEmail() {
+        if (!institution) {
             toast.warning("Please select an institution.");
             return;
         }
@@ -72,36 +106,33 @@ function EmailForm() {
                 comments: comments,
             });
 
-            // Trigger a success toast
             toast.success("Email sent successfully!");
-            
-            // Optional: Clear the form after success
             setComments("");
+            
+            // Close the preview dialog if it was open
+            setPreviewOpen(false);
 
         } catch (error) {
             console.error(error);
-            // Trigger an error toast
             toast.error("Failed to send email. Please try again.");
-
         } finally {
             setSending(false);
         }
     }
 
     return (
-        <Card className="shadow-xl">
-            <CardHeader>
-                <CardTitle>
-                    📧 Email Notification Portal
+        <Card className="rounded-2xl border border-slate-200 shadow-xl">
+            <CardHeader className="border-b pb-6">
+                <CardTitle className="flex items-center gap-3 text-2xl">
+                    <Mail className="h-7 w-7 text-slate-700" />
+                    SRE Email Notification Portal
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-sm text-slate-500">
                     Notify partner institutions about transaction issues.
                 </CardDescription>
             </CardHeader>
             
             <CardContent className="space-y-6 pt-4">
-                {/* The old static Notification component has been removed */}
-                
                 <InstitutionSelect
                     institutions={institutions}
                     value={institution}
@@ -123,14 +154,61 @@ function EmailForm() {
                     checked={attachSamples}
                     onChange={setAttachSamples}
                 />
+                
+                <EmailPreviewDialog
+                    open={previewOpen}
+                    onOpenChange={setPreviewOpen}
+                    institution={
+                        institutions.find(
+                            (i) => i.id === Number(institution)
+                        )
+                    }
+                    responseCode={responseCode}
+                    comments={comments}
+                    attachSamples={attachSamples}
+                    onConfirm={confirmAndSendEmail}
+                    sending={sending}
+                    sampleCount={previewData?.sample_count}
+                    latestTransaction={previewData?.latest_transaction}
+                    attachmentName={previewData?.attachment_name}
+                />
+                
+                <div className="flex flex-row gap-4 pt-2">
+                    <Button
+                        variant="outline"
+                        onClick={handlePreview}
+                        disabled={loadingPreview || sending}
+                        className="w-1/4"
+                    >
+                        {/* 4. Added spinner for the preview button */}
+                        {loadingPreview ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Loading...
+                            </>
+                        ) : (
+                            "Preview Email"
+                        )}
+                    </Button>
 
-                <Button
-                    className="w-full mt-4 bg-[#0056b3] hover:bg-[#0056b3]/90 text-white"
-                    onClick={handleSendEmail}
-                    disabled={sending}
-                >
-                    {sending ? "Sending Notification..." : "Send Notification"}
-                </Button>
+                    <Button
+                        onClick={confirmAndSendEmail}
+                        disabled={sending || loadingPreview}
+                        className="w-3/4 bg-[#0056b3] hover:bg-[#0056b3]/90 text-white"
+                    >
+                        {sending ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Sending Email...
+                            </>
+                        ) : (
+                            <>
+                                <Send className="mr-2 h-4 w-4" />
+                                Send Notification
+                            </>
+                        )}
+                    </Button>
+                </div>
             </CardContent>
         </Card>
     );
