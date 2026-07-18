@@ -122,14 +122,21 @@ function EmailForm() {
 
     return (
         <Card className="rounded-2xl border border-slate-200 shadow-xl">
-            <CardHeader className="border-b pb-6">
-                <CardTitle className="flex items-center gap-3 text-2xl">
-                    <Mail className="h-7 w-7 text-slate-700" />
-                    SRE Email Notification Portal
-                </CardTitle>
-                <CardDescription className="text-sm text-slate-500">
+            <CardHeader>
+            <div className="flex items-center gap-4">
+                {/* Colorful Icon Container */}
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#007cc2]/10 text-[#007cc2]">
+                    <Mail className="h-6 w-6" />
+                </div>
+                
+                {/* Text container */}
+                <div className="flex flex-col">
+                <CardTitle className="text-2xl">SRE Email Notification Portal</CardTitle>
+                <p className="text-sm text-slate-500 font-normal">
                     Notify partner institutions about transaction issues.
-                </CardDescription>
+                </p>
+                </div>
+            </div>
             </CardHeader>
             
             <CardContent className="space-y-6 pt-4">
@@ -194,7 +201,7 @@ function EmailForm() {
                     <Button
                         onClick={confirmAndSendEmail}
                         disabled={sending || loadingPreview}
-                        className="w-3/4 bg-[#0056b3] hover:bg-[#0056b3]/90 text-white"
+                        className="w-3/4 bg-[#007cc2] hover:bg-[#007cc2]/60 text-white"
                     >
                         {sending ? (
                             <>

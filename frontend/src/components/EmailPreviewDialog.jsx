@@ -171,7 +171,7 @@ function EmailPreviewDialog({
           <Button
             onClick={onConfirm}
             disabled={sending}
-            className="bg-[#0056b3] hover:bg-[#0056b3]/90 text-white"
+            className="bg-[#007cc2] hover:bg-[#0056b3]/50 text-white"
           >
             {sending ? (
               <>
