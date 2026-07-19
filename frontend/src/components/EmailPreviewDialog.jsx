@@ -1,9 +1,7 @@
 import {
     Mail,
-    Building2, // You can remove this if you aren't using it
     Users,
     Paperclip,
-    FileText,  // You can remove this if you aren't using it
     Send,
     Loader2,
 } from "lucide-react";
@@ -29,7 +27,7 @@ function EmailPreviewDialog({
   sending, 
   sampleCount,
   latestTransaction,
-  attachmentName, // Comes directly from the backend now!
+  attachmentName, 
 }) {
   const today = new Date();
   const dateString =
@@ -38,8 +36,6 @@ function EmailPreviewDialog({
     String(today.getDate()).padStart(2, "0");
   const rcStr = responseCode || "N/A";
   const subjectLine = `${institution?.name || "Institution"} | ATS | RC${rcStr} | ${dateString}`;
-
-  // REMOVED the duplicate const attachmentName declaration here
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -53,24 +49,24 @@ function EmailPreviewDialog({
 
         <div className="space-y-6">
           {/* Email Details */}
-          <div className="rounded-xl border bg-slate-50 p-5">
-            <h3 className="mb-4 flex items-center gap-2 font-semibold">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900/50">
+            <h3 className="mb-4 flex items-center gap-2 font-semibold dark:text-slate-100">
               <Mail className="h-5 w-5" />
               Email Details
             </h3>
 
             <div className="space-y-3 text-sm">
               <div>
-                <p className="text-slate-500">
-                  Subject: <span className="font-medium text-slate-900">{subjectLine}</span>
+                <p className="text-slate-500 dark:text-slate-400">
+                  Subject: <span className="font-medium text-slate-900 dark:text-slate-100">{subjectLine}</span>
                 </p>
               </div>
 
               {/* Updated To: Line */}
               <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-slate-500" />
-                <p className="text-slate-500">
-                  To: <span className="font-medium text-slate-900">
+                <Users className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                <p className="text-slate-500 dark:text-slate-400">
+                  To: <span className="font-medium text-slate-900 dark:text-slate-100">
                     {institution?.email_to 
                         ? institution.email_to.split(",").map(e => e.trim()).join(", ") 
                         : "No email provided"}
@@ -81,8 +77,8 @@ function EmailPreviewDialog({
               {/* Updated CC: Line */}
               {institution?.email_cc && (
                 <div className="flex items-center gap-2 pl-6">
-                  <p className="text-slate-500">
-                    CC: <span className="font-medium text-slate-900">
+                  <p className="text-slate-500 dark:text-slate-400">
+                    CC: <span className="font-medium text-slate-900 dark:text-slate-100">
                       {institution.email_cc.split(",").map(e => e.trim()).join(", ")}
                     </span>
                   </p>
@@ -91,29 +87,29 @@ function EmailPreviewDialog({
             </div>
           </div>
 
-          {/* New Attachment Preview Block */}
+          {/* Attachment Preview Block */}
           {attachSamples && (
-            <div className="rounded-xl border bg-slate-50 p-5">
-                <h3 className="mb-4 flex items-center gap-2 font-semibold">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900/50">
+                <h3 className="mb-4 flex items-center gap-2 font-semibold dark:text-slate-100">
                 <Paperclip className="h-5 w-5" />
                 Attachment Preview
                 </h3>
 
                 <div className="space-y-2 text-sm">
-                <p className="font-medium text-slate-900">
+                <p className="font-medium text-slate-900 dark:text-slate-100">
                     {attachmentName}
                 </p>
 
-                <p className="text-slate-600">
+                <p className="text-slate-600 dark:text-slate-300">
                     {sampleCount ?? 0} sample transactions
                 </p>
 
                 <div>
-                    <p className="text-slate-500">
+                    <p className="text-slate-500 dark:text-slate-400">
                     Latest Transaction
                     </p>
 
-                    <p className="font-medium">
+                    <p className="font-medium dark:text-slate-200">
                     {latestTransaction || "No transactions found"}
                     </p>
                 </div>
@@ -121,7 +117,8 @@ function EmailPreviewDialog({
             </div>
           )}
 
-          <div className="rounded-md border bg-slate-50 p-4 text-sm">
+          {/* Email Body Context */}
+          <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-300">
             <p>Hello team,</p>
             <br />
             <p>
@@ -133,7 +130,7 @@ function EmailPreviewDialog({
               <>
                 <br />
                 <p>
-                  <strong>Additional Context:</strong>
+                  <strong className="dark:text-slate-100">Additional Context:</strong>
                   <br />
                   {comments}
                 </p>
@@ -154,7 +151,7 @@ function EmailPreviewDialog({
             <br />
             <p>Thanks and warm regards,</p>
             <p>
-              <strong>Application Support Team</strong>
+              <strong className="dark:text-slate-100">Application Support Team</strong>
             </p>
           </div>
         </div>
@@ -164,6 +161,7 @@ function EmailPreviewDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={sending}
+            className="dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
           >
             Cancel
           </Button>
@@ -171,7 +169,7 @@ function EmailPreviewDialog({
           <Button
             onClick={onConfirm}
             disabled={sending}
-            className="bg-[#007cc2] hover:bg-[#0056b3]/50 text-white"
+            className="bg-[#007cc2] hover:bg-[#0056b3]/50 text-white dark:bg-[#007cc2] dark:hover:bg-[#0056b3]"
           >
             {sending ? (
               <>

@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Mail, Send, Loader2 } from "lucide-react";
+import { Mail, Send, Loader2, ArrowLeft } from "lucide-react";
 import InstitutionSelect from "./InstitutionSelect";
 import ResponseCodeSelect from "./ResponseCodeSelect";
 import AttachSamplesCheckbox from "./AttachSamplesCheckbox";
 import CommentsBox from "./CommentsBox";
 import EmailPreviewDialog from "./EmailPreviewDialog";
+import { Link } from "react-router-dom";
 
 import {
     getInstitutions,
@@ -121,103 +122,116 @@ function EmailForm() {
     }
 
     return (
-        <Card className="rounded-2xl border border-slate-200 shadow-xl">
-            <CardHeader>
-            <div className="flex items-center gap-4">
-                {/* Colorful Icon Container */}
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#007cc2]/10 text-[#007cc2]">
-                    <Mail className="h-6 w-6" />
-                </div>
-                
-                {/* Text container */}
-                <div className="flex flex-col">
-                <CardTitle className="text-2xl">SRE Email Notification Portal</CardTitle>
-                <p className="text-sm text-slate-500 font-normal">
-                    Notify partner institutions about transaction issues.
-                </p>
-                </div>
+        <>
+            {/* Back Link */}
+            <div className="mb-6">
+                <Link 
+                    to="/" 
+                    className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+                >
+                    <ArrowLeft className="h-4 w-4" />
+                    Back to SRE Dashboard
+                </Link>
             </div>
-            </CardHeader>
-            
-            <CardContent className="space-y-6 pt-4">
-                <InstitutionSelect
-                    institutions={institutions}
-                    value={institution}
-                    onChange={setInstitution}
-                />
 
-                <ResponseCodeSelect
-                    responseCodes={responseCodes}
-                    value={responseCode}
-                    onChange={setResponseCode}
-                />
-
-                <CommentsBox
-                    value={comments}
-                    onChange={setComments}
-                />
-
-                <AttachSamplesCheckbox
-                    checked={attachSamples}
-                    onChange={setAttachSamples}
-                />
-                
-                <EmailPreviewDialog
-                    open={previewOpen}
-                    onOpenChange={setPreviewOpen}
-                    institution={
-                        institutions.find(
-                            (i) => i.id === Number(institution)
-                        )
-                    }
-                    responseCode={responseCode}
-                    comments={comments}
-                    attachSamples={attachSamples}
-                    onConfirm={confirmAndSendEmail}
-                    sending={sending}
-                    sampleCount={previewData?.sample_count}
-                    latestTransaction={previewData?.latest_transaction}
-                    attachmentName={previewData?.attachment_name}
-                />
-                
-                <div className="flex flex-row gap-4 pt-2">
-                    <Button
-                        variant="outline"
-                        onClick={handlePreview}
-                        disabled={loadingPreview || sending}
-                        className="w-1/4"
-                    >
-                        {/* 4. Added spinner for the preview button */}
-                        {loadingPreview ? (
-                            <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Loading...
-                            </>
-                        ) : (
-                            "Preview Email"
-                        )}
-                    </Button>
-
-                    <Button
-                        onClick={confirmAndSendEmail}
-                        disabled={sending || loadingPreview}
-                        className="w-3/4 bg-[#007cc2] hover:bg-[#007cc2]/60 text-white"
-                    >
-                        {sending ? (
-                            <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Sending Email...
-                            </>
-                        ) : (
-                            <>
-                                <Send className="mr-2 h-4 w-4" />
-                                Send Notification
-                            </>
-                        )}
-                    </Button>
+            <Card className="rounded-2xl border border-slate-200 shadow-xl">
+                <CardHeader>
+                <div className="flex items-center gap-4">
+                    {/* Colorful Icon Container */}
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#007cc2]/10 text-[#007cc2]">
+                        <Mail className="h-6 w-6" />
+                    </div>
+                    
+                    {/* Text container */}
+                    <div className="flex flex-col">
+                    <CardTitle className="text-2xl">SRE Email Notification Portal</CardTitle>
+                    <p className="text-sm text-slate-500 font-normal">
+                        Notify partner institutions about transaction issues.
+                    </p>
+                    </div>
                 </div>
-            </CardContent>
-        </Card>
+                </CardHeader>
+                
+                <CardContent className="space-y-6 pt-4">
+                    <InstitutionSelect
+                        institutions={institutions}
+                        value={institution}
+                        onChange={setInstitution}
+                    />
+
+                    <ResponseCodeSelect
+                        responseCodes={responseCodes}
+                        value={responseCode}
+                        onChange={setResponseCode}
+                    />
+
+                    <CommentsBox
+                        value={comments}
+                        onChange={setComments}
+                    />
+
+                    <AttachSamplesCheckbox
+                        checked={attachSamples}
+                        onChange={setAttachSamples}
+                    />
+                    
+                    <EmailPreviewDialog
+                        open={previewOpen}
+                        onOpenChange={setPreviewOpen}
+                        institution={
+                            institutions.find(
+                                (i) => i.id === Number(institution)
+                            )
+                        }
+                        responseCode={responseCode}
+                        comments={comments}
+                        attachSamples={attachSamples}
+                        onConfirm={confirmAndSendEmail}
+                        sending={sending}
+                        sampleCount={previewData?.sample_count}
+                        latestTransaction={previewData?.latest_transaction}
+                        attachmentName={previewData?.attachment_name}
+                    />
+                    
+                    <div className="flex flex-row gap-4 pt-2">
+                        <Button
+                            variant="outline"
+                            onClick={handlePreview}
+                            disabled={loadingPreview || sending}
+                            className="w-1/4"
+                        >
+                            {/* 4. Added spinner for the preview button */}
+                            {loadingPreview ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Loading...
+                                </>
+                            ) : (
+                                "Preview Email"
+                            )}
+                        </Button>
+
+                        <Button
+                            onClick={confirmAndSendEmail}
+                            disabled={sending || loadingPreview}
+                            className="w-3/4 bg-[#007cc2] hover:bg-[#007cc2]/60 text-white"
+                        >
+                            {sending ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Sending Email...
+                                </>
+                            ) : (
+                                <>
+                                    <Send className="mr-2 h-4 w-4" />
+                                    Send Notification
+                                </>
+                            )}
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+        </>
     );
 }
 

@@ -1,15 +1,30 @@
+import { Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
-// Import the Toaster from your ui folder
+import EmailNotification from "./pages/EmailNotification";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/theme-provider";
 
 function App() {
-  return (
-    <>
-      <Home />
-      {/* Add the Toaster here. richColors makes the success/error toasts green and red */}
-      <Toaster richColors position="top-right" />
-    </>
-  );
+    return (
+        <ThemeProvider defaultTheme="light" storageKey="sre-portal-theme">
+            <Routes>
+                <Route
+                    path="/"
+                    element={<Home />}
+                />
+
+                <Route
+                    path="/email"
+                    element={<EmailNotification />}
+                />
+            </Routes>
+
+            <Toaster
+                richColors
+                position="top-right"
+            />
+        </ThemeProvider>
+    );
 }
 
 export default App;

@@ -8,6 +8,14 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  server: {
+    host: '0.0.0.0', 
+    allowedHosts: [
+      'remodeler-open-companion.ngrok-free.dev',
+      'localhost',
+      '.ngrok-free.dev' // This will allow any sub-domain from ngrok automatically
+    ],
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

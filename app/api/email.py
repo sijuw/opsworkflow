@@ -137,8 +137,7 @@ def send_email(
             
             <br>
             <p>Thanks and warm regards,<br>
-            <strong>Application Support Team</strong><br>
-            Moniepoint</p>
+            <strong>Application Support Team</strong><br></p>
         </body>
     </html>
     """
