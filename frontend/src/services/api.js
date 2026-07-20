@@ -1,19 +1,19 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: "http://127.0.0.1:8001",
+  baseURL: import.meta.env.VITE_API_URL,
 });
 
-export const getInstitutions = () => api.get("/institutions");
-
-export default api;
+export const getInstitutions = () =>
+  api.get("/institutions");
 
 export const getResponseCodes = () =>
-    api.get("/response-codes");
+  api.get("/response-codes");
 
 export const sendEmail = (payload) =>
-    api.post("/email/send", payload);
+  api.post("/email/send", payload);
 
-export function previewEmail(data) {
-    return api.post("/email/preview", data);
-}
+export const previewEmail = (payload) =>
+  api.post("/email/preview", payload);
+
+export default api;
