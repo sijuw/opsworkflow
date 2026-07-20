@@ -1,93 +1,189 @@
-# sre-workflows
+# OpsFlow
 
+> A modular SRE Workflow Automation Platform designed to eliminate operational toil, standardize support processes, and improve incident response efficiency.
 
+---
 
-## Getting started
+## 📖 Overview
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+OpsFlow is a full-stack internal engineering platform built to automate repetitive operational tasks performed by Application Support and Site Reliability Engineering (SRE) teams.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+Rather than relying on manual procedures, OpsFlow provides reusable workflows that standardize operational activities, reduce response time, improve consistency, and enhance engineer productivity.
 
-## Add your files
+The platform is built with a modular architecture, allowing new workflows to be added without impacting existing functionality.
 
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+---
+
+## ✨ Current Features (v1.0)
+
+### 📧 Email Notification Workflow
+
+Automates partner communication during production incidents by:
+
+- Selecting a financial institution
+- Selecting a response code
+- Adding optional operational context
+- Retrieving recent failed transactions from the transaction database
+- Generating a formatted Excel attachment
+- Previewing the exact email before sending
+- Sending notifications via SMTP
+
+### Email Preview
+
+Before dispatching, engineers can verify:
+
+- Subject
+- Recipients (To & CC)
+- Email body
+- Attachment filename
+- Number of sample transactions
+- Latest transaction timestamp
+
+This helps eliminate incorrect notifications and improves confidence before sending.
+
+### Excel Report Generation
+
+Automatically generates an Excel report containing transaction samples including:
+
+---
+
+## 🏗 Planned Workflows
+
+OpsFlow has been designed as a modular platform.
+
+Upcoming workflows include:
+
+- Enable Service Logging
+- Switch Bank VPN Connections
+- Refresh Interchange
+- Institution Management
+- Operational Reporting
+- Incident Timeline
+- RCA Assistant
+- Additional SRE automation workflows
+
+---
+
+## 🛠 Technology Stack
+
+### Frontend
+
+- React
+- Vite
+- React Router
+- Tailwind CSS
+- shadcn/ui
+- Lucide Icons
+
+### Backend
+
+- FastAPI
+- SQLAlchemy
+- Pydantic
+- SMTP
+- OpenPyXL
+
+### Database
+
+- SQLite (Configuration)
+- MySQL (Transaction Data)
+
+### Infrastructure
+
+- Docker *(Planned)*
+- Kubernetes *(Deployment Target)*
+
+---
+
+## 📁 Project Structure
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/tcosmos/teamapt-repository/sre-workflows.git
-git branch -M main
-git push -uf origin main
+opsflow/
+│
+├── backend/
+│
+├── frontend/
+│
+├── docs/
+│
+└── k8s/ (Coming Soon)
 ```
 
-## Integrate with your tools
+---
 
-* [Set up project integrations](https://gitlab.com/tcosmos/teamapt-repository/sre-workflows/-/settings/integrations)
+## 🚀 Roadmap
 
-## Collaborate with your team
+### v1.0
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+- Dashboard
+- Email Notification Workflow
+- Email Preview
+- Excel Generation
+- SMTP Integration
 
-## Test and Deploy
+### v1.1
 
-Use the built-in continuous integration in GitLab.
+- Enable Logging Workflow
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
+### v1.2
 
-***
+- Switch Institutions VPN Workflow
 
-# Editing this README
+### v1.3
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+- Refresh Interchange Workflow
 
-## Suggestions for a good README
+### v1.4
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+- Institution Management
 
-## Name
-Choose a self-explaining name for your project.
+### v2.0
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+- Authentication
+- RBAC
+- Audit Logs
+- Workflow History
+- Metrics Dashboard
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+---
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+## 🎯 Project Goals
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+OpsFlow aims to:
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+- Reduce operational toil
+- Standardize repetitive support tasks
+- Improve incident response efficiency
+- Minimize human error
+- Increase workflow consistency
+- Enable self-service operational automation
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+---
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+## 📸 Screenshots
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+### Dashboard
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+> <img width="760" height="783" alt="image" src="https://github.com/user-attachments/assets/3552bdda-9d82-4598-8953-9f8a36770069" />
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+### Email Notification Workflow
 
-## License
-For open source projects, say how it is licensed.
+> <img width="433" height="422" alt="image" src="https://github.com/user-attachments/assets/1eaca211-f106-4c03-a51d-2fbb70cf7406" />
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+
+### Email Preview
+
+> <img width="443" height="524" alt="image" src="https://github.com/user-attachments/assets/ede2a7e9-7894-4eb1-8439-3d2b01a3ec3c" />
+
+
+---
+
+## 👨‍💻 Author
+
+**Saheed Yusuf**
+
+Senior Application Support Engineer
+
+LinkedIn:
+https://linkedin.com/in/saheed-yusuf
