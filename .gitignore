@@ -4,5 +4,5 @@ __pycache__/
 .env
 uploads/
 generated_reports/
-alembic/
 tests/
+README.md
