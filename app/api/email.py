@@ -37,12 +37,14 @@ def preview_email(
             detail="Institution not found"
         )
 
-    # 2. Fetch the samples to get the count and latest transaction time
-    samples = get_sample_transactions(
-        transaction_db,
-        institution.bank_id,
-        request.response_code,
-    )
+    # 2. Conditionally fetch samples ONLY if requested
+    samples = []
+    if request.attach_samples:
+        samples = get_sample_transactions(
+            transaction_db,
+            institution.bank_id,
+            request.response_code,
+        )
 
     sample_count = len(samples)
     latest_transaction = samples[0].request_time if samples else None
@@ -51,10 +53,13 @@ def preview_email(
     attachment_name = None
     if request.attach_samples:
         today_str = datetime.now().strftime("%Y%m%d")
-        rc_str = request.response_code or "N/A"
+        
+        # Conditionally format the RC part for the filename
+        rc_part = f"_RC{request.response_code}" if request.response_code else ""
+        
         attachment_name = (
             f"{institution.name.replace(' ', '_')}"
-            f"_RC{rc_str}_{today_str}.xlsx"
+            f"{rc_part}_{today_str}.xlsx"
         )
 
     # 4. Return the populated response
@@ -87,28 +92,31 @@ def send_email(
     if institution.email_cc:
         cc = [email.strip() for email in institution.email_cc.split(",")]
 
-    # 3. Fetch Samples
-    samples = get_sample_transactions(
-        transaction_db,
-        institution.bank_id,
-        request.response_code,
-    )
+    # 3. Conditionally Fetch Samples ONLY if requested
+    samples = []
+    if request.attach_samples:
+        samples = get_sample_transactions(
+            transaction_db,
+            institution.bank_id,
+            request.response_code,
+        )
 
     sample_count = len(samples)
-    latest_transaction = None
-
-    if samples:
-        latest_transaction = samples[0].request_time
+    latest_transaction = samples[0].request_time if samples else None
         
     # 4. Define Common Variables
     today_str = datetime.now().strftime("%Y%m%d")
-    rc_str = request.response_code or "N/A"
+    
+    # Conditionally format the RC elements
+    rc_part = f"_RC{request.response_code}" if request.response_code else ""
+    subject_rc = f" | RC{request.response_code}" if request.response_code else ""
+    body_rc = f" with RC{request.response_code}" if request.response_code else ""
     
     # 5. Generate Attachment
     excel_file = None
     attachment_filename = (
         f"{institution.name.replace(' ', '_')}"
-        f"_RC{rc_str}_{today_str}.xlsx"
+        f"{rc_part}_{today_str}.xlsx"
     )
     
     if request.attach_samples:
@@ -118,10 +126,9 @@ def send_email(
         )
 
     # 6. Format the Subject Line
-    subject_line = f"{institution.name} | ATS | RC{rc_str} | {today_str}"
+    subject_line = f"{institution.name} | ATS{subject_rc} | {today_str}"
 
     # 7. Format Conditional Texts
-    # Note: Added 'Additional Context:' inside the strong tags so it renders nicely
     comments_text = f"<br><br><strong>Additional Context:</strong><br>{request.comments}" if request.comments else ""
     attachment_text = "<br><br>Please find attached sample transactions for your investigation." if request.attach_samples else ""
 
@@ -131,13 +138,12 @@ def send_email(
         <body style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
             <p>Hello Team,</p>
             
-            <p>Please be informed that {institution.name} bank card transactions are currently failing with RC{rc_str}.{comments_text}</p>
+            <p>Please be informed that {institution.name} bank card transactions are currently failing{body_rc}.{comments_text}</p>
             
             <p>Kindly assist with the review.{attachment_text}</p>
             
             <br>
-            <p>Thanks and warm regards,<br>
-            <strong>Application Support Team</strong><br></p>
+            <p>Thanks and warm regards</p>
         </body>
     </html>
     """
