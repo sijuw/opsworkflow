@@ -19,23 +19,16 @@ import { Button } from "@/components/ui/button";
 function EmailPreviewDialog({
   open,
   onOpenChange,
-  institution,
-  responseCode,
-  comments,
+  preview,
   attachSamples,
   onConfirm,
-  sending, 
-  sampleCount,
-  latestTransaction,
-  attachmentName, 
+  sending,
 }) {
-  const today = new Date();
-  const dateString =
-    today.getFullYear() +
-    String(today.getMonth() + 1).padStart(2, "0") +
-    String(today.getDate()).padStart(2, "0");
-  const rcStr = responseCode || "N/A";
-  const subjectLine = `${institution?.name || "Institution"} | ATS | RC${rcStr} | ${dateString}`;
+  // Nothing is reconstructed here: `preview` is the rendered email the
+  // server will send, so what is approved below is what goes out.
+  const subject = preview?.subject ?? "";
+  const to = preview?.to ?? [];
+  const cc = preview?.cc ?? [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -58,28 +51,24 @@ function EmailPreviewDialog({
             <div className="space-y-3 text-sm">
               <div>
                 <p className="text-slate-500 dark:text-slate-400">
-                  Subject: <span className="font-medium text-slate-900 dark:text-slate-100">{subjectLine}</span>
+                  Subject: <span className="font-medium text-slate-900 dark:text-slate-100">{subject}</span>
                 </p>
               </div>
 
-              {/* Updated To: Line */}
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                 <p className="text-slate-500 dark:text-slate-400">
                   To: <span className="font-medium text-slate-900 dark:text-slate-100">
-                    {institution?.email_to 
-                        ? institution.email_to.split(",").map(e => e.trim()).join(", ") 
-                        : "No email provided"}
+                    {to.length ? to.join(", ") : "No email provided"}
                   </span>
                 </p>
               </div>
 
-              {/* Updated CC: Line */}
-              {institution?.email_cc && (
+              {cc.length > 0 && (
                 <div className="flex items-center gap-2 pl-6">
                   <p className="text-slate-500 dark:text-slate-400">
                     CC: <span className="font-medium text-slate-900 dark:text-slate-100">
-                      {institution.email_cc.split(",").map(e => e.trim()).join(", ")}
+                      {cc.join(", ")}
                     </span>
                   </p>
                 </div>
@@ -97,11 +86,11 @@ function EmailPreviewDialog({
 
                 <div className="space-y-2 text-sm">
                 <p className="font-medium text-slate-900 dark:text-slate-100">
-                    {attachmentName}
+                    {preview?.attachment_name}
                 </p>
 
                 <p className="text-slate-600 dark:text-slate-300">
-                    {sampleCount ?? 0} sample transactions
+                    {preview?.sample_count ?? 0} sample transactions
                 </p>
 
                 <div>
@@ -110,49 +99,22 @@ function EmailPreviewDialog({
                     </p>
 
                     <p className="font-medium dark:text-slate-200">
-                    {latestTransaction || "No transactions found"}
+                    {preview?.latest_transaction || "No transactions found"}
                     </p>
                 </div>
                 </div>
             </div>
           )}
 
-          {/* Email Body Context */}
-          <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-300">
-            <p>Hello team,</p>
-            <br />
-            <p>
-              Please be informed that {institution?.name || "Institution"} bank
-              card transactions are currently failing with RC{rcStr}.
-            </p>
-
-            {comments && (
-              <>
-                <br />
-                <p>
-                  <strong className="dark:text-slate-100">Additional Context:</strong>
-                  <br />
-                  {comments}
-                </p>
-              </>
-            )}
-
-            <br />
-            <p>Kindly assist with the review.</p>
-
-            {attachSamples && (
-              <p>
-                <br />
-                Please find attached sample transactions for your investigation.
-              </p>
-            )}
-
-            <br />
-            <br />
-            <p>Thanks and warm regards,</p>
-            <p>
-              <strong className="dark:text-slate-100">Application Support Team</strong>
-            </p>
+          {/* The rendered body, shown exactly as the recipient will see it.
+              Sandboxed so the preview can't execute anything. */}
+          <div className="overflow-hidden rounded-md border border-slate-200 dark:border-slate-800">
+            <iframe
+              title="Email body preview"
+              srcDoc={preview?.body ?? ""}
+              sandbox=""
+              className="h-64 w-full bg-white"
+            />
           </div>
         </div>
 

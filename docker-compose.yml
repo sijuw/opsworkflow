@@ -24,6 +24,11 @@ services:
     ports:
       - "3000:80"
 
+    # nginx substitutes this into the proxy_set_header at startup.
+    # Must match API_TOKEN in .env.docker.
+    environment:
+      - API_TOKEN=${API_TOKEN}
+
     depends_on:
       - opsflow-api
 

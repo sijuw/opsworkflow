@@ -81,6 +81,7 @@ function EmailForm() {
                 institution_id: Number(institution),
                 response_code: responseCode, // Removed the `|| null` fallback
                 attach_samples: attachSamples,
+                comments: comments,
             });
 
             setPreviewData(response.data);
@@ -184,22 +185,15 @@ function EmailForm() {
                         onChange={setAttachSamples}
                     />
                     
+                    {/* Everything shown in the dialog comes from `preview`,
+                        which is exactly what the server will send. */}
                     <EmailPreviewDialog
                         open={previewOpen}
                         onOpenChange={setPreviewOpen}
-                        institution={
-                            institutions.find(
-                                (i) => i.id === Number(institution)
-                            )
-                        }
-                        responseCode={responseCode}
-                        comments={comments}
+                        preview={previewData}
                         attachSamples={attachSamples}
                         onConfirm={confirmAndSendEmail}
                         sending={sending}
-                        sampleCount={previewData?.sample_count}
-                        latestTransaction={previewData?.latest_transaction}
-                        attachmentName={previewData?.attachment_name}
                     />
                     
                     <div className="flex flex-row gap-4 pt-2">

@@ -1,21 +1,14 @@
-from dotenv import load_dotenv
 import os
 
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
+from app.db.url import build_mysql_url
+
 load_dotenv()
 
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
-DB_NAME = os.getenv("DB_NAME")
-
-DATABASE_URL = (
-    f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}"
-    f"@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-)
+DATABASE_URL = build_mysql_url("DB")
 
 
 class Base(DeclarativeBase):
@@ -24,7 +17,8 @@ class Base(DeclarativeBase):
 
 engine = create_engine(
     DATABASE_URL,
-    echo=True,  # Show generated SQL while developing
+    # Was unconditionally True, which logs every statement in production.
+    echo=os.getenv("SQL_ECHO", "false").lower() == "true",
 )
 
 SessionLocal = sessionmaker(

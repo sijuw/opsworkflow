@@ -1,11 +1,17 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.core.security import require_api_token
 from app.db.dependencies import get_db
 from app.models.institution import Institution
 from app.schemas.institution import InstitutionCreate, InstitutionResponse
 
-router = APIRouter(prefix="/institutions", tags=["Institutions"])
+# Guarded too: this endpoint lists every partner bank's email contacts.
+router = APIRouter(
+    prefix="/institutions",
+    tags=["Institutions"],
+    dependencies=[Depends(require_api_token)],
+)
 
 
 @router.post("", response_model=InstitutionResponse)
