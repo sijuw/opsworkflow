@@ -27,7 +27,6 @@ function EmailForm() {
     const [institutions, setInstitutions] = useState([]);
     const [responseCodes, setResponseCodes] = useState([]);
     
-    // 1. Added previewData to state
     const [previewData, setPreviewData] = useState(null); 
     const [previewOpen, setPreviewOpen] = useState(false);
     const [loadingPreview, setLoadingPreview] = useState(false);
@@ -65,8 +64,13 @@ function EmailForm() {
 
     async function handlePreview() {
         if (!institution) {
-            // 2. Swapped to toast
             toast.warning("Please select an institution.");
+            return;
+        }
+
+        // NEW: Enforce response code selection before hitting the API
+        if (!responseCode) {
+            toast.warning("Please select a response code to generate a preview.");
             return;
         }
 
@@ -75,8 +79,8 @@ function EmailForm() {
 
             const response = await previewEmail({
                 institution_id: Number(institution),
-                response_code: responseCode || null,
-                attach_samples: attachSamples, // 3. Added the missing parameter
+                response_code: responseCode, // Removed the `|| null` fallback
+                attach_samples: attachSamples,
             });
 
             setPreviewData(response.data);
@@ -84,7 +88,6 @@ function EmailForm() {
 
         } catch (error) {
             console.error(error);
-            // 2. Swapped to toast
             toast.error("Unable to generate preview.");
         } finally {
             setLoadingPreview(false);
@@ -97,12 +100,18 @@ function EmailForm() {
             return;
         }
 
+        // NEW: Enforce response code selection before sending
+        if (!responseCode) {
+            toast.warning("Please select a response code before sending.");
+            return;
+        }
+
         try {
             setSending(true);
 
             await sendEmail({
                 institution_id: Number(institution),
-                response_code: responseCode || null,
+                response_code: responseCode, // Removed the `|| null` fallback
                 attach_samples: attachSamples,
                 comments: comments,
             });
@@ -197,10 +206,10 @@ function EmailForm() {
                         <Button
                             variant="outline"
                             onClick={handlePreview}
+                            // Disabled if loading, sending
                             disabled={loadingPreview || sending}
                             className="w-1/4"
                         >
-                            {/* 4. Added spinner for the preview button */}
                             {loadingPreview ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -213,6 +222,7 @@ function EmailForm() {
 
                         <Button
                             onClick={confirmAndSendEmail}
+                            // Disabled if loading, sending
                             disabled={sending || loadingPreview}
                             className="w-3/4 bg-[#007cc2] hover:bg-[#007cc2]/60 text-white"
                         >

@@ -13,8 +13,17 @@ export default defineConfig({
     allowedHosts: [
       'remodeler-open-companion.ngrok-free.dev',
       'localhost',
-      '.ngrok-free.dev' // This will allow any sub-domain from ngrok automatically
+      '.ngrok-free.dev'
     ],
+    proxy: {
+      // Intercept all requests starting with /api
+      '/api': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        // This removes the '/api' prefix before sending it to FastAPI
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
   },
   resolve: {
     alias: {
