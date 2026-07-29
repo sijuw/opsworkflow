@@ -22,5 +22,10 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
 
+        # Injected here rather than in the bundle, so the token is never
+        # served to the browser. ${API_TOKEN} is substituted at startup by
+        # the nginx image's envsubst entrypoint.
+        proxy_set_header Authorization "Bearer ${API_TOKEN}";
+
     }
 }

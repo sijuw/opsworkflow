@@ -1,7 +1,9 @@
 import axios from "axios";
 
+// Always via the /api proxy — nginx (prod) and vite (dev) attach the
+// Authorization header there, so no token is ever bundled into the client.
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: import.meta.env.VITE_API_URL || "/api",
 });
 
 export const getInstitutions = () =>

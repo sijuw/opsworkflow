@@ -15,7 +15,11 @@ RUN npm run build
 # ---------- Runtime Stage ----------
 FROM nginx:alpine
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Templates in this directory are run through envsubst on container start.
+# The filter keeps substitution to API_TOKEN so nginx's own $host,
+# $remote_addr etc. are left alone.
+COPY default.conf.template /etc/nginx/templates/default.conf.template
+ENV NGINX_ENVSUBST_FILTER="API_TOKEN"
 
 COPY --from=builder --chown=nginx:nginx /app/dist /usr/share/nginx/html
 

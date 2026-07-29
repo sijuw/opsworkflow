@@ -1,4 +1,3 @@
-from datetime import datetime
 from pathlib import Path
 
 from openpyxl import Workbook
@@ -6,7 +5,12 @@ from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter
 
 
-def generate_excel(samples, institution_name, response_code=None):
+def generate_excel(samples, filename: str) -> str:
+    """Write samples to generated_reports/<filename> and return the path.
+
+    The caller supplies the filename so the name shown in the preview and
+    the name that reaches the recipient are the same string.
+    """
     workbook = Workbook()
     sheet = workbook.active
     sheet.title = "Sample Transactions"
@@ -38,21 +42,12 @@ def generate_excel(samples, institution_name, response_code=None):
 
             sheet.column_dimensions[column].width = min(max_length + 2, 50)
 
-    # Build dynamic filename
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    institution = institution_name.replace(" ", "_").upper()
-
-    filename = (
-        f"{institution}_{response_code}_{timestamp}.xlsx"
-        if response_code
-        else f"{institution}_{timestamp}.xlsx"
-    )
-
     # Save inside a dedicated folder
     output_dir = Path("generated_reports")
     output_dir.mkdir(exist_ok=True)
 
-    filepath = output_dir / filename
+    # .name strips any directory component an institution name could smuggle in
+    filepath = output_dir / Path(filename).name
     workbook.save(filepath)
 
     return str(filepath)

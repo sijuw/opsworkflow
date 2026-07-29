@@ -1,29 +1,22 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
+from sqlalchemy import create_engine
 from sqlalchemy import pool
 from app.models import *
 from alembic import context
 from app.db.database import Base
-import os
+from app.db.url import build_mysql_url
 
 from dotenv import load_dotenv
 
 load_dotenv()
 target_metadata = Base.metadata
 
-DATABASE_URL = (
-    f"mysql+pymysql://"
-    f"{os.getenv('DB_USER')}:"
-    f"{os.getenv('DB_PASSWORD')}@"
-    f"{os.getenv('DB_HOST')}:"
-    f"{os.getenv('DB_PORT')}/"
-    f"{os.getenv('DB_NAME')}"
-)
+# Built with URL.create so credentials are escaped, and used directly rather
+# than via set_main_option: alembic.ini is a ConfigParser file, so a "%" in a
+# password would be read as interpolation syntax and blow up.
+DATABASE_URL = build_mysql_url("DB")
 
-config = context.config
-
-config.set_main_option("sqlalchemy.url", DATABASE_URL)
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -57,9 +50,8 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=url,
+        url=DATABASE_URL,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -76,11 +68,7 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    connectable = create_engine(DATABASE_URL, poolclass=pool.NullPool)
 
     with connectable.connect() as connection:
         context.configure(

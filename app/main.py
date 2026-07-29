@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 
 from app.api.institution import router as institution_router
@@ -10,9 +12,17 @@ app = FastAPI(
     title="OpsFlow API",
     version="1.0.0",
 )
+# Explicit origins: "*" with allow_credentials=True is rejected by browsers
+# anyway, and the UI reaches the API through its own /api proxy.
+ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
