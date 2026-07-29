@@ -1,9 +1,5 @@
 from fastapi import FastAPI
 
-from app.db.database import Base, engine
-
-# Import models so SQLAlchemy registers them
-from app.models import Institution
 from app.api.institution import router as institution_router
 from app.api.email import router as email_router
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,7 +20,6 @@ app.add_middleware(
 app.include_router(institution_router)
 app.include_router(email_router)
 app.include_router(response_code_router)
-Base.metadata.create_all(bind=engine)
 
 @app.get("/")
 def root():

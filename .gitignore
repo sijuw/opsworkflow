@@ -2,7 +2,8 @@
 __pycache__/
 *.pyc
 .env
+.env.docker
 uploads/
 generated_reports/
-alembic/
 tests/
+README.md
