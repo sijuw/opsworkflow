@@ -14,8 +14,13 @@ import time
 from typing import Protocol, runtime_checkable
 
 import httpx
+from dotenv import load_dotenv
 
 from app.services.connection_switch import endpoint_for
+
+# This module reads its config lazily, so don't depend on some other import
+# having loaded .env first.
+load_dotenv()
 
 # Hosts that follow the {key}.{APTENT_BASE_DOMAIN} pattern.
 TOKEN_HOST = "aptent-cosmos"
@@ -58,6 +63,74 @@ class AptentAuthError(AptentError):
 
 class AptentNotFound(AptentError):
     """The requested interchange is not present in Cosmos."""
+
+
+def _oauth_error(resp) -> str:
+    """Surface RFC 6749 error fields if present.
+
+    `error` and `error_description` are diagnostic, not secret — they are
+    the difference between "invalid_client" and a blind guess.
+    """
+    try:
+        body = resp.json()
+    except Exception:  # noqa: BLE001 - not JSON, nothing to add
+        return ""
+    if not isinstance(body, dict):
+        return ""
+    err = body.get("error")
+    desc = body.get("error_description")
+    if err and desc:
+        return f": {err} — {desc}"
+    if err:
+        return f": {err}"
+    return ""
+
+
+def _unwrap_token_body(body, status_code: int) -> dict:
+    """Return the dict holding access_token, whichever shape Cosmos used.
+
+    Cosmos does not return the plain RFC 6749 body. It wraps it:
+
+        {"success": true, "errors": [], "result": {"access_token": ...}}
+
+    A bare OAuth2 body is still accepted, so this works against a standard
+    Spring token endpoint too.
+    """
+    if not isinstance(body, dict):
+        raise AptentAuthError(
+            f"Aptent token response (HTTP {status_code}) was "
+            f"{type(body).__name__}, expected an object"
+        )
+
+    if "access_token" in body:
+        return body
+
+    if isinstance(body.get("result"), dict) and "access_token" in body["result"]:
+        # Envelope present and populated — but still honour an explicit
+        # failure flag rather than using a token from a failed response.
+        if body.get("success") is False:
+            raise AptentAuthError(
+                f"Aptent reported failure minting a token: "
+                f"{body.get('errors') or 'no detail given'}"
+            )
+        return body["result"]
+
+    if body.get("success") is False or body.get("errors"):
+        raise AptentAuthError(
+            f"Aptent rejected the token request: "
+            f"{body.get('errors') or 'no detail given'}"
+        )
+
+    # Key names only — values could carry a token.
+    inner = (
+        f"; result fields: {sorted(body['result'])}"
+        if isinstance(body.get("result"), dict)
+        else ""
+    )
+    raise AptentAuthError(
+        f"Aptent token response (HTTP {status_code}) had no access_token. "
+        f"Fields present: {sorted(body)}{inner}"
+    )
 
 
 def scrub(value):
@@ -159,21 +232,42 @@ class AptentHttpClient:
         if resp.status_code in (400, 401, 403):
             raise AptentAuthError(
                 f"Aptent rejected client '{self._client_id}' "
-                f"(HTTP {resp.status_code}). Check APTENT_CLIENT_ID / "
-                f"APTENT_CLIENT_SECRET."
+                f"(HTTP {resp.status_code}){_oauth_error(resp)}. Check "
+                f"APTENT_CLIENT_ID / APTENT_CLIENT_SECRET."
             )
+
+        # 3xx is a failure here, not a success. Spring redirects the token
+        # endpoint to its login page when it does not accept the client
+        # credentials, and httpx does not follow redirects — so without this
+        # a 302 would fall through and fail later as "no access_token".
+        if 300 <= resp.status_code < 400:
+            location = resp.headers.get("location", "")
+            hint = " (redirected to a login page — client auth was not accepted)"
+            if location and "login" not in location.lower():
+                hint = f" (redirected to {location.split('?')[0]})"
+            raise AptentAuthError(
+                f"Aptent token endpoint returned HTTP {resp.status_code}{hint}. "
+                f"Check APTENT_CLIENT_ID / APTENT_CLIENT_SECRET."
+            )
+
         if resp.status_code >= 400:
             raise AptentAuthError(
                 f"Aptent token endpoint returned HTTP {resp.status_code}"
+                f"{_oauth_error(resp)}"
             )
 
         try:
             body = resp.json()
-            token = body["access_token"]
-        except Exception as exc:  # noqa: BLE001 - malformed body
+        except Exception as exc:  # noqa: BLE001 - not JSON at all
+            ctype = resp.headers.get("content-type", "unknown")
             raise AptentAuthError(
-                "Aptent token response did not contain an access_token"
+                f"Aptent token endpoint returned HTTP {resp.status_code} with "
+                f"a non-JSON body (content-type: {ctype}). This usually means "
+                f"the request did not reach the token endpoint."
             ) from exc
+
+        body = _unwrap_token_body(body, resp.status_code)
+        token = body["access_token"]
 
         # expires_in is seconds. Fall back to a short life if absent so we
         # re-mint often rather than clinging to a token of unknown age.
@@ -368,7 +462,14 @@ def get_aptent_client() -> AptentClient:
     if _client_singleton is None:
         with _singleton_lock:
             if _client_singleton is None:
-                _client_singleton = build_aptent_client()
+                client = build_aptent_client()
+                # Deliberately don't cache the unconfigured placeholder. If
+                # it were cached, a process that served one request before
+                # the credentials were present would keep reporting
+                # "not configured" for its whole life.
+                if isinstance(client, UnconfiguredAptentClient):
+                    return client
+                _client_singleton = client
     return _client_singleton
 
 
