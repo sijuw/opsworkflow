@@ -6,6 +6,7 @@ from app.api.institution import router as institution_router
 from app.api.email import router as email_router
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.response_code import router as response_code_router
+from app.api.connection import router as connection_router
 
 
 app = FastAPI(
@@ -30,6 +31,7 @@ app.add_middleware(
 app.include_router(institution_router)
 app.include_router(email_router)
 app.include_router(response_code_router)
+app.include_router(connection_router)
 
 @app.get("/")
 def root():
