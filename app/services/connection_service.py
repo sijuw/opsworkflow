@@ -334,6 +334,20 @@ def get_status(db: Session, client: AptentClient, config_id: int) -> dict:
 # --- the switch ------------------------------------------------------------
 
 
+def _specific_data(isd: str) -> dict:
+    """Build the `specificData` sibling exactly as the portal does.
+
+    Verified against both captured POST bodies: it is the parsed
+    interchangeSpecificData with "$$hashKey" removed from each
+    sinkConnections entry. The string form keeps the key; this one does not.
+    """
+    parsed = json.loads(isd)
+    for conn in parsed.get("sinkConnections") or []:
+        if isinstance(conn, dict):
+            conn.pop("$$hashKey", None)
+    return parsed
+
+
 def _target(primary, secondary, target_route: str) -> list[Endpoint]:
     if target_route == PRIMARY:
         return primary
@@ -380,11 +394,9 @@ def _prepare(config: ConnectionConfig, client: AptentClient, target_route: str):
 
     service, path = endpoint_for(live_type, config.interchange_id)
 
-    # The portal sends the parsed form alongside the string; because we write
-    # connections without the AngularJS $$hashKey, the two agree exactly.
     payload = dict(cfg)
     payload["interchangeSpecificData"] = new_isd
-    payload["specificData"] = json.loads(new_isd)
+    payload["specificData"] = _specific_data(new_isd)
 
     changed_field = "remoteUrl" if strategy == REMOTE_URL else "sinkConnections"
     target_route_row = _route(config, target_route)

@@ -235,20 +235,52 @@ def swap_remote_url_port(isd: str, new_port: int, validate: bool = True) -> str:
 
 _SINK_ARRAY_RE = re.compile(r'("sinkConnections"\s*:\s*)(\[.*?\])(\s*[,}])', re.DOTALL)
 
+# Connection objects are flat, so a non-greedy brace match is sufficient.
+_CONN_OBJ_RE = re.compile(r"\{[^{}]*\}")
+_HOST_VAL_RE = re.compile(r'("host"\s*:\s*")([^"]*)(")')
+_PORT_VAL_RE = re.compile(r'("port"\s*:\s*)("[^"]*"|\d+)')
+
+
+def _rewrite_connection(obj: str, ep: Endpoint) -> str:
+    """Replace only the host and port *values* inside one connection object.
+
+    Every other byte survives — key order, whitespace, and any extra fields
+    Cosmos has persisted such as the AngularJS "$$hashKey".
+    """
+    obj, n = _HOST_VAL_RE.subn(
+        lambda m: f"{m.group(1)}{ep.host}{m.group(3)}", obj, count=1
+    )
+    if not n:
+        raise ConnectionSwitchError(
+            f'Connection object has no "host" field: {obj[:80]}'
+        )
+
+    def _port(m):
+        # Preserve the original quoting style — Cosmos stores ports as strings.
+        quoted = m.group(2).startswith('"')
+        return f'{m.group(1)}"{ep.port}"' if quoted else f"{m.group(1)}{ep.port}"
+
+    obj, n = _PORT_VAL_RE.subn(_port, obj, count=1)
+    if not n:
+        raise ConnectionSwitchError(
+            f'Connection object has no "port" field: {obj[:80]}'
+        )
+    return obj
+
 
 def swap_sink_connections(
     isd: str, endpoints: list[Endpoint], validate: bool = True
 ) -> str:
-    """Replace the whole sinkConnections array with the target route.
+    """Point each existing connection at the target route's host and port.
 
-    The connection count is preserved by construction: whatever list is
-    passed in is what gets written. A three-socket pool switched to a
-    three-entry route stays three sockets.
+    Entries are updated *in place* rather than the array being rebuilt, so
+    nothing Cosmos has stored is lost — including "$$hashKey", an AngularJS
+    artifact that has no meaning to the server but which the portal
+    round-trips and which we must not silently drop.
 
-    Note: the written entries carry only host and port. Cosmos round-trips
-    an AngularJS "$$hashKey" on existing entries; we deliberately do not
-    reproduce it, because it is client-side rendering state with no meaning
-    to the server and no sensible value for a newly written connection.
+    The connection count is never changed: writing a different number of
+    connections than the live config holds would add or remove sockets as a
+    side effect of a route switch, so it is refused.
     """
     if not endpoints:
         raise ConnectionSwitchError("Refusing to write an empty connection list")
@@ -262,14 +294,26 @@ def swap_sink_connections(
 
     m = _SINK_ARRAY_RE.search(isd)
     if not m:
-        raise ConnectionSwitchError("No sinkConnections array found in interchangeSpecificData")
+        raise ConnectionSwitchError(
+            "No sinkConnections array found in interchangeSpecificData"
+        )
 
-    # Match the escaping style Cosmos uses: compact, no spaces.
-    rendered = json.dumps(
-        [{"host": ep.host, "port": str(ep.port)} for ep in endpoints],
-        separators=(",", ":"),
-    )
-    return isd[: m.start(2)] + rendered + isd[m.end(2) :]
+    array_text = m.group(2)
+    objects = list(_CONN_OBJ_RE.finditer(array_text))
+    if len(objects) != len(endpoints):
+        raise ConnectionSwitchError(
+            f"Live config holds {len(objects)} connection(s) but the target "
+            f"route has {len(endpoints)} — refusing to add or drop connections."
+        )
+
+    pieces, last = [], 0
+    for obj_match, ep in zip(objects, endpoints):
+        pieces.append(array_text[last : obj_match.start()])
+        pieces.append(_rewrite_connection(obj_match.group(0), ep))
+        last = obj_match.end()
+    pieces.append(array_text[last:])
+
+    return isd[: m.start(2)] + "".join(pieces) + isd[m.end(2) :]
 
 
 def apply_switch(
@@ -334,22 +378,29 @@ def _assert_remote_url_swap(before: str, after: str) -> None:
 
 
 def _assert_sink_swap(before: str, after: str, intended: list[Endpoint]) -> None:
-    mb = _SINK_ARRAY_RE.search(before)
-    ma = _SINK_ARRAY_RE.search(after)
-    if not mb or not ma:
+    """Same proof as the REST path, now that connections are edited in place.
+
+    Reversing the edit must reproduce the original byte for byte. That covers
+    every field we did not intend to touch — including "$$hashKey", which an
+    array rebuild would have silently dropped.
+    """
+    original = read_sink_connections(before)
+    if not original:
         raise DiffAssertionError(
-            "sinkConnections array missing from one side — cannot verify"
+            "No sinkConnections in the original — cannot verify"
         )
 
-    if before[: mb.start(2)] != after[: ma.start(2)]:
+    try:
+        # validate=False: the live value may hold a port we would reject on
+        # the way in, and we still have to reproduce it exactly.
+        reversed_ = swap_sink_connections(after, original, validate=False)
+    except ConnectionSwitchError as exc:
+        raise DiffAssertionError(f"Could not reverse the edit to verify it: {exc}")
+
+    if reversed_ != before:
         raise DiffAssertionError(
             "Edit changed more than the connection — aborting. "
-            f"({_first_difference(before[: mb.start(2)], after[: ma.start(2)])})"
-        )
-    if before[mb.end(2) :] != after[ma.end(2) :]:
-        raise DiffAssertionError(
-            "Edit changed more than the connection — aborting. "
-            f"({_first_difference(before[mb.end(2) :], after[ma.end(2) :])})"
+            f"({_first_difference(before, reversed_)})"
         )
 
     written = read_sink_connections(after)
@@ -357,11 +408,6 @@ def _assert_sink_swap(before: str, after: str, intended: list[Endpoint]) -> None
         raise DiffAssertionError(
             f"Written connections {summarise(written)} do not match the "
             f"intended route {summarise(intended)} — aborting"
-        )
-    if len(written) != len(intended):
-        raise DiffAssertionError(
-            f"Connection count changed: wrote {len(written)}, intended "
-            f"{len(intended)} — aborting"
         )
 
 
