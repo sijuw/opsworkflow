@@ -46,10 +46,11 @@ function Home() {
               to="/email"
             />
             <WorkflowCard
-              title="Switch Bank VPN"
-              description="Switch VPN connections for partner banks."
+              title="Switch Institution Connection"
+              description="Move a partner institution between its provisioned connection routes."
               icon={Network}
-              status="planned"
+              status="available"
+              to="/connection-switcher"
             />
             <WorkflowCard
               title="Refresh Interchange"

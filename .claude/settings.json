@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -)",
+      "Bash(.venv/bin/python -c \"import ast; ast.parse\\(open\\('app/services/connection_service.py'\\).read\\(\\)\\); print\\('parses ok'\\)\")"
+    ]
+  }
+}
